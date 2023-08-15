@@ -162,7 +162,7 @@ for i, team in enumerate(teams):
 
 # Output the list of FYs with Colour Teams Added
 with open(FY_OUT_CSV_FILE, 'w') as file:
-    csv_writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL, lineterminator='\n')
+    csv_writer = csv.writer(file, delimiter=',', quoting=csv.QUOTE_NONE, lineterminator='\n')
     # Write the header row
     header = first_years.columns.tolist()
     header.append('Colour Team')

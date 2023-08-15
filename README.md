@@ -1,6 +1,7 @@
 # First Year Allocator
 
 This repository contains a script to allocate first years based on 2 primary goals:
+
 - Ensure Colour Team counts are as even as possible
 - Evenly distribute FYs from each deparment to the relevant colour teams
 
@@ -11,5 +12,8 @@ The First Year input should be specified in the [`first_year_list.csv`](./first_
 The SQL template is specified in the [`fy-query.template.sql`](./fy-query.template.sql) file. It is set up for the website database as initially created in 2023. Ensure the database config and Query parameters align for any future versions of the website.
 
 The script, [`first-years-allocate.py`](./first-years-allocate.py), will output two files:
+
 - [`fy-query.sql`](./fy-query.sql) file which can be used to write the FYs into an SQL database
 - [`allocated_firts_years.csv`](./allocated_firts_years.csv) file which contains a CSV list of the first years and their allocated colour teams
+
+The [`fake_student_data_generator.py`](./fake_student_data_generator.py) script can be used to generate fake student data for testing purposes. It will output to the [`first-year-list.csv`](./first-year-list.csv) file which can be used as the input for the allocation script. Allows testing the allocator script without needing to use real student data.
