@@ -6,7 +6,7 @@ This repository contains a script to allocate first years based on 2 primary goa
 
 The Colour teams and available departments should be specified in the [`colour_teams.json`](./colour_teams.json) file. An example of the file is provided as [`colour_teams.example.json`](./colour_teams.example.json).
 
-The First Year input should be specified in the [`first_year_list.csv`](./first_year_list.csv) file. An example of the file is provided as [`first_years_list.example.csv`](./first_years_list.example.csv).
+The First Year input should be specified in the [`first_year_list.csv`](./first_year_list.csv) file. An example of the file is provided as [`first_year_list.example.csv`](./first_year_list.example.csv).
 
 The SQL template is specified in the [`fy-query.template.sql`](./fy-query.template.sql) file. It is set up for the website database as initially created in 2023. Ensure the database config and Query parameters align for any future versions of the website.
 
