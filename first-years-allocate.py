@@ -1,11 +1,19 @@
 
+import csv
 import json
+import random
 import numpy as np
+import jinja2 as j2
 import pandas as pd
 import scipy.optimize as opt
+from gekko import GEKKO
+m = GEKKO()
 
 TEAMS_JSON_FILE = './colour_teams.json'
 FY_CSV_FILE = './first_year_list.csv'
+FY_OUT_CSV_FILE = './allocated_first_years.csv'
+SQL_TEMLPATE_FILE = './fy-query.template.sql'
+SQL_OUT_FILE = './fy-query.sql'
 
 # CREATE TEAMS INFORMATION FROM JSON FILE ───────────────────────────────────────── #
  
@@ -49,15 +57,20 @@ first_years = pd.read_csv(FY_CSV_FILE, header=0)
 department_counts = {}
 for dept in departments:
     department_counts[dept] = first_years[first_years["Department"] == dept].shape[0]
+    
+# Create a dictionary of FYs by department
+fy_by_dept = {}
+for dept in departments:
+    fy_by_dept[dept] = [fy for _, fy in first_years.iterrows() if fy['Department'] == dept]
 
-first_year_counts = np.zeros((len(teams), len(departments)))
+
+# DEFINE THE TARGET ARRAY ───────────────────────────────────────────────────────── #
+first_year_counts = m.Array(m.Var, (len(teams), len(departments)), lb=0, ub=1000, integer=True) # Create an array of variables for the number of first years in each department on each team
 
 
 # DEFINE THE OPTIMIZATION PROBLEM ───────────────────────────────────────────────── #
-
 # Target function
-def allocation_scoring(y):
-    x = np.reshape(y, (len(teams), len(departments))) # Reshape the input array into a 2D array
+def allocation_scoring(x):
     score = 0
     """
     Take the sum of the squared differences between the actual and the average of FY dept. count / available dept. teams
@@ -90,34 +103,81 @@ def allocation_scoring(y):
     """
     return score
 
+
 # DEFINE THE CONTRAINTS FOR THE SYSTEM ──────────────────────────────────────────── #
 constraints = []
 # Contrain disallowed departments on colour teams to 0
-for i, dept in enumerate(departments):
-    opt.LinearConstraint(np.ndarray.flatten(department_identity[dept]), 0, 0)
+for i, row in enumerate(team_departments):
+    for j, val in enumerate(row):
+        if (val == 0):
+            m.Equation(first_year_counts[i][j] == 0)
 
 # Constrain the total number of students in each department to the actual number of students
 for i, dept in enumerate(departments):
-    opt.NonlinearConstraint(lambda y: {
-        (np.reshape(y, (len(teams), len(departments))) * department_identity[dept]).sum(axis=1)
-        }, department_counts, department_counts)
+    m.Equation((first_year_counts * department_identity[dept]).sum() == department_counts[dept])
     
-res = opt.minimize(allocation_scoring, np.ndarray.flatten(first_year_counts), constraints=constraints)
-print(res)
-exit()
-
+# res = opt.minimize(allocation_scoring, np.ndarray.flatten(first_year_counts), constraints=constraints)
+m.Minimize(allocation_scoring(first_year_counts))
+m.options.SOLVER=1
+m.solver_options=['minlp_maximum_iterations 1000', \
+                  # minlp iterations with integer solution
+                  'minlp_max_iter_with_int_sol 100', \
+                  # treat minlp as nlp
+                  'minlp_as_nlp 0', \
+                  # nlp sub-problem max iterations
+                  'nlp_maximum_iterations 50', \
+                  # 1 = depth first, 2 = breadth first
+                  'minlp_branch_method 1', \
+                  # maximum deviation from whole number
+                  'minlp_integer_tol 0.001', \
+                  # covergence tolerance
+                  'minlp_gap_tol 0.001']
+m.solve(disp=False)
 
 # Output the list of First Year department count per colour team
-# counts = pd.DataFrame(first_year_counts, index=teams, columns=departments) # Create printable dataframe with named rows and columns
-counts = pd.DataFrame(team_departments, index=teams, columns=departments) # Create printable dataframe with named rows and columns
-counts = counts.astype(int) # Convert all values to integer, for cleaner output
+first_year_counts_int = [ [0]*len(departments) for i in range(len(teams))]
+for i, row in enumerate(first_year_counts):
+    for j, val in enumerate(row):
+        first_year_counts_int[i][j] = int(val.VALUE[0])
+counts = pd.DataFrame(first_year_counts_int, index=teams, columns=departments) # Create printable dataframe with named rows and columns
+counts['Sum'] = counts.sum(axis=1)
+pd.set_option('display.max_colwidth', None)
 print('Colour Team Allocations:')
 print(counts)
 
-# Print out list of department sums
+# Print out list of department sums and targets
 print('\nDepartment Sums:')
-print(counts.sum(axis=0))
+dept_stats = pd.DataFrame.from_dict(department_counts, orient='index', columns=['Target'])
+dept_stats['Actual'] = counts.sum(axis=0)
+print(dept_stats)
 
-# Print out list of team sums
-print('\nTeam Sums:')
-print(counts.sum(axis=1))
+
+# ASSIGN FYS TO COLOUR TEAMS ────────────────────────────────────────────────────── #
+fy_by_colour_team = {}
+for i, team in enumerate(teams):
+    fy_by_colour_team[team] = []
+    for j, dept in enumerate(departments):
+        for k in range(first_year_counts_int[i][j]):
+            fy_by_colour_team[team].append(fy_by_dept[dept].pop(random.randint(0, len(fy_by_dept[dept])-1)))
+
+# Output the list of FYs with Colour Teams Added
+with open(FY_OUT_CSV_FILE, 'w') as file:
+    csv_writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL, lineterminator='\n')
+    # Write the header row
+    header = first_years.columns.tolist()
+    header.append('Colour Team')
+    csv_writer.writerow(header)
+    # Write fy data
+    fy_list = []
+    for team in fy_by_colour_team:
+        for fy in fy_by_colour_team[team]:
+            vals = [fy[key] for key in fy.keys()]+[team]
+            csv_writer.writerow(vals)
+            fy_list.append({header[i]: vals[i] for i in range(len(header))})
+
+# Fill out SQL query template with FY information
+with open(SQL_TEMLPATE_FILE, 'r') as file:
+    sql_template = j2.Template(file.read())
+    
+with open(SQL_OUT_FILE, 'w') as file:
+    file.write(sql_template.render(fy_list=fy_list))

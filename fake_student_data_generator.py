@@ -1,4 +1,5 @@
 import csv
+import string
 import random
 from faker import Faker
 from faker.providers import BaseProvider
@@ -25,12 +26,16 @@ class DepartmentProvider(BaseProvider):
         PROBABILITIES: list[float] = [(d[0], d[1]/sum(n for _,n in self.DEPARTMENTS))for d in self.DEPARTMENTS]
         return random.choices([d[0] for d in PROBABILITIES], weights=[d[1] for d in PROBABILITIES], k=1)[0]
 
+    def watiam(self):
+        letters = string.ascii_lowercase
+        return ''.join(random.choice(letters) for i in range(8))
+
 student_faker = Faker()
 student_faker.add_provider(DepartmentProvider)
 
 with open('first_year_list.csv', mode='w', newline='') as file:
     writer = csv.writer(file)
-    writer.writerow(['Fullname', 'Department'])
+    writer.writerow(['Fullname', 'Department', 'Watiam'])
 
     for i in range(1600):
-        writer.writerow([student_faker.name(), student_faker.department()])
+        writer.writerow([student_faker.name(), student_faker.department(), student_faker.watiam()])

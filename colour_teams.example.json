@@ -1,0 +1,77 @@
+{
+    "teams":
+    [
+        {
+            "Colour": "Light Red",
+            "Departments": ["civ", "mech", "nano", "tron"]
+        },
+        {
+            "Colour": "Light Orange",
+            "Departments": ["ece", "mgmt", "nano", "tron"]
+        },
+        {
+            "Colour": "Light Yellow",
+            "Departments": ["bme", "chem", "mgmt", "syde"]
+        },
+        {
+            "Colour": "Light Green",
+            "Departments": ["ae", "bme", "ece", "syde"]
+        },
+        {
+            "Colour": "Light Teal",
+            "Departments": ["ae", "ece", "se", "tron"]
+        },
+        {
+            "Colour": "Light Blue",
+            "Departments": ["ae", "bme", "mgmt", "se"] 
+        },
+        {
+            "Colour": "Light Purple",
+            "Departments": ["chem", "env", "mech", "se"]
+        },
+        {
+            "Colour": "Light Pink",
+            "Departments": ["ece", "se", "syde", "tron"]
+        },
+        {
+            "Colour": "Light Brown",
+            "Departments": ["env", "nano", "syde", "tron"]
+        },
+        {
+            "Colour": "Dark Red",
+            "Departments": ["ece", "nano", "syde", "tron"]
+        },
+        {
+            "Colour": "Dark Orange",
+            "Departments": ["chem", "civ", "ece", "mech"]
+        },
+        {
+            "Colour": "Dark Yellow",
+            "Departments": ["bme", "env", "geo", "mgmt"]
+        },
+        {
+            "Colour": "Dark Green",
+            "Departments": ["civ", "ece", "mech", "tron"]
+        },
+        {
+            "Colour": "Dark Teal",
+            "Departments": ["bme", "ece", "mech", "mgmt"]
+        },
+        {
+            "Colour": "Dark Blue",
+            "Departments": ["bme", "ece", "mech", "tron"]
+        },
+        {
+            "Colour": "Dark Purple",
+            "Departments": ["chem", "ece", "mech", "tron"]
+        },
+        {
+            "Colour": "Dark Pink",
+            "Departments": ["chem", "mech", "mgmt", "syde"]
+        },
+        {
+            "Colour": "Dark Brown",
+            "Departments": ["ae", "civ", "ece", "tron"]
+        }
+    ]
+}
