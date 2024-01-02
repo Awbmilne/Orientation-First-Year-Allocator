@@ -1,4 +1,18 @@
-fy-query.sql
-colour_teams.json
-first_year_list.csv
-allocated_first_years.csv
+# Ignore python virtual environments
+venv
+.venv
+
+# Ignore all output files. This mitigates issues of FY student
+# information being commited to the codebase accidentally.
+*.sql
+*.csv
+*.json
+# Re-Include config files
+!.vscode/extensions.json
+
+# Re-Include Template file
+!fy-query.sql.jinja2
+
+# Re-Include Example files
+!colour-teams.example.json
+!fy-list.example.csv

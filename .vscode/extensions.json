@@ -1,0 +1,10 @@
+{
+    "recommendations": [
+        "ms-python.vscode-pylance",
+        "ms-python.python",
+        "visualstudioexptteam.vscodeintellicode",
+        "wholroyd.jinja",
+        "mechatroner.rainbow-csv",
+
+    ]
+}

@@ -5,15 +5,28 @@ This repository contains a script to allocate first years based on 2 primary goa
 - Ensure Colour Team counts are as even as possible
 - Evenly distribute FYs from each deparment to the relevant colour teams
 
-The Colour teams and available departments should be specified in the [`colour_teams.json`](./colour_teams.json) file. An example of the file is provided as [`colour_teams.example.json`](./colour_teams.example.json).
+## Python Package Dependencies
+To install the required python packages, run the following command:
+``` bash
+pip install -r requirements.txt
+```
 
-The First Year input should be specified in the [`first_year_list.csv`](./first_year_list.csv) file. An example of the file is provided as [`first_year_list.example.csv`](./first_year_list.example.csv).
+## Usage
+``` bash
+# Run the script
+python allocate-fys.py [ARGUEMENTS]
 
-The SQL template is specified in the [`fy-query.template.sql`](./fy-query.template.sql) file. It is set up for the website database as initially created in 2023. Ensure the database config and Query parameters align for any future versions of the website.
+# Get the help message (this will show all the arguments and more documentation)
+python allocate-fys.py --help
+```
 
-The script, [`first-years-allocate.py`](./first-years-allocate.py), will output two files:
+## Fake Student Generator
+This repo also contains a fake student generator to generate fake students for testing the application. The generator can be run using the following command:
+``` bash
+python fake-fy-gen.py
+# or, you can specify the students and output file.
+python fake-fy-gen.py -s [NUMBER OF STUDENTS] -o [OUTPUT FILE]
 
-- [`fy-query.sql`](./fy-query.sql) file which can be used to write the FYs into an SQL database
-- [`allocated_firts_years.csv`](./allocated_firts_years.csv) file which contains a CSV list of the first years and their allocated colour teams
-
-The [`fake_student_data_generator.py`](./fake_student_data_generator.py) script can be used to generate fake student data for testing purposes. It will output to the [`first-year-list.csv`](./first-year-list.csv) file which can be used as the input for the allocation script. Allows testing the allocator script without needing to use real student data.
+# Get the help message
+python fake-fy-gen.py --help
+```

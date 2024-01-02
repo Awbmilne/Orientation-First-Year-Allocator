@@ -1,0 +1,31 @@
+
+/*
+-------------------------------------------------------------------------------
+Template Author: Austin W. Milne
+Template Last Modified: 2023-01-02
+Query Generated: {{timestamp}}
+-------------------------------------------------------------------------------
+SQL query for inserting FYs into the students table
+
+This format is based on the database scheme of the engineering
+orientation website database as of 2023. Ensure that it is still correct
+before running this script.
+
+The query can be run using MySQL Workbench, or some other MySQL compatible GUI.
+To do this, copy the following content into the query editor, and run it.
+
+The query can also be run using the mysql command line tool. To do this, copy
+this file onto the server, and run the query directly. Refer to the mysql man
+page to clarify how to do this. https://linux.die.net/man/1/mysql
+-------------------------------------------------------------------------------
+*/
+
+-- Clear existing FYs
+DELETE FROM students where position = 'fy';
+
+-- Insert FYs into students table
+INSERT INTO students (watiam, fullname, department, colour_team)
+VALUES
+    {%- for fy in fy_list %}
+        ("{{fy['Watiam']}}", "{{fy['Fullname']}}", "{{fy['Department']}}", "{{fy['Colour Team']}}"){% if loop.last %};{%else%},{% endif %}
+    {%- endfor %}
