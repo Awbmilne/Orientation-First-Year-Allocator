@@ -46,18 +46,18 @@ allocations in some way (ex. FY Shirt numbers). The program WILL NOT RUN THE ALL
 ALGORITHM if only these arguments are given.
 """, formatter_class=RawTextHelpFormatter)
 
-parser.epilog = \
-"""
-Example Allocation: python allocate-fys.py --teams colour-teams.example.json --fy fy-list.example.csv --csv-out allocated_first_years.example.csv --sql fy-query.sql.jinja2 --sql-out fy-query.example.sql
-
-Example CSV -> SQL Conversion: python allocate_fys.py --csv-out allocated_first_years.example.csv --sql fy-query.sql.jinja2 --sql-out fy-query.example.sql
-"""
-
 parser.add_argument('--teams', type=str, help='Path to the teams JSON file', required=False)
 parser.add_argument('--fy', type=str, help='Path to the first-year CSV file', required=False)
 parser.add_argument('--csv-out', type=str, help='Path to the allocated first-years CSV file', required=False)
 parser.add_argument('--sql', type=str, help='Path to the SQL query template file [requires --sql-out]', required=False)
 parser.add_argument('--sql-out', type=str, help='Path to the generated SQL query file [requires --sql]', required=False)
+
+parser.epilog = \
+"""
+Example Allocation: python allocate-fys.py --teams colour-teams.example.json --fy fy-list.example.csv --csv-out allocated_first_years.example.csv --sql fy-query.sql.jinja2 --sql-out fy-query.example.sql
+
+Example CSV -> SQL Conversion: python allocate-fys.py --csv-out allocated_first_years.example.csv --sql fy-query.sql.jinja2 --sql-out fy-query.example.sql
+"""
 
 # Show help menu if no arguments are given
 if len(sys.argv) == 1:
@@ -65,17 +65,6 @@ if len(sys.argv) == 1:
     exit()
 
 args = parser.parse_args()
-
-# Require either --csv-out or --sql-out
-if (args.csv_out is None) and ((args.sql_out is None) or (args.sql is None)):
-    parser.error('Must specify either --csv-out or --sql & --sql-out')
-    exit()
-    
-# Require --sql if --sql-out is given, and vice versa
-if (args.sql_out is not None) and (args.sql is None) or \
-   (args.sql is not None) and (args.sql_out is None):
-    parser.error('Must specify both --sql & --sql-out')
-    exit()
 
 # CONVERT CSV OUTPUT FILE TO SQL QUERY ──────────────────────────────────────────── #
 
@@ -106,8 +95,8 @@ if (args.teams is None) \
         file.write(sql_template.render(fy_list=fy_list, timestamp=timestamp))
     print('Done.')
     exit()
-        
-# CREATE TEAMS INFORMATION FROM JSON FILE ───────────────────────────────────────── #
+    
+# INPUT VALIDATION ──────────────────────────────────────────────────────────────── #
 
 # Convert args to variables
 TEAMS_JSON_FILE = args.teams
@@ -116,17 +105,33 @@ FY_OUT_CSV_FILE = args.csv_out
 SQL_TEMLPATE_FILE = args.sql
 SQL_OUT_FILE = args.sql_out
 
+# Require both --teams and --fy
+if (args.teams is None) or (args.fy is None):
+    parser.error('Must specify both --teams & --fy')
+    exit()
+
+# Require either --csv-out or --sql-out
+if (args.csv_out is None) and ((args.sql_out is None) or (args.sql is None)):
+    parser.error('Must specify either --csv-out or both --sql and --sql-out')
+    exit()
+
 # Check if the CSV output file exists and ask user if they want to overwrite it
 if FY_OUT_CSV_FILE is not None:
     if os.path.exists(FY_OUT_CSV_FILE):
-        if not click.confirm(f"WARNING: Output File '{FY_OUT_CSV_FILE}'already exists. Overwrite?", default=False):
+        if not click.confirm(f"WARNING: Output File ({FY_OUT_CSV_FILE}) already exists. Overwrite?", default=False):
+            print("Exiting...")
+            print("Rerun the command with a different output file name or delete the existing file.")
             exit()
             
 # Check if the SQL output file exists and ask user if they want to overwrite it
 if SQL_OUT_FILE is not None:
     if os.path.exists(SQL_OUT_FILE):
-        if not click.confirm(f"WARNING: Output File '{SQL_OUT_FILE}'already exists. Overwrite?", default=False):
+        if not click.confirm(f"WARNING: Output File ({SQL_OUT_FILE}) already exists. Overwrite?", default=False):
+            print("Exiting...")
+            print("Rerun the command with a different output file name or delete the existing file.")
             exit()
+        
+# CREATE TEAMS INFORMATION FROM JSON FILE ───────────────────────────────────────── #
 
 # Read the 'teams' array from the json file
 print('Injesting teams data...')
@@ -269,6 +274,7 @@ counts['Sum'] = counts.sum(axis=1)
 pd.set_option('display.max_colwidth', None)
 print('Colour Team Allocations:')
 print(counts)
+print("\n")
 
 # DEBUGGING: Print out list of department sums and targets
 # print('\nDepartment Sums:')
@@ -277,6 +283,7 @@ print(counts)
 # print(dept_stats)
 
 # ASSIGN FYS TO COLOUR TEAMS ────────────────────────────────────────────────────── #
+print('Assigning first-years to colour teams...')
 fy_by_colour_team = {}
 for i, team in enumerate(teams):
     fy_by_colour_team[team] = []
@@ -286,6 +293,7 @@ for i, team in enumerate(teams):
 
 # Output the list of FYs with Colour Teams Added
 if FY_OUT_CSV_FILE is not None:
+    print(f'Writing allocated first-years to CSV file ({FY_OUT_CSV_FILE})...')
     with open(FY_OUT_CSV_FILE, 'w') as file:
         csv_writer = csv.writer(file, delimiter=',', quoting=csv.QUOTE_NONE, lineterminator='\n')
         # Write the header row
@@ -302,9 +310,12 @@ if FY_OUT_CSV_FILE is not None:
 
 # Fill out SQL query template with FY information
 if SQL_OUT_FILE is not None:
+    print(f'Writing output SQL query file ({SQL_OUT_FILE})...')
     with open(SQL_TEMLPATE_FILE, 'r') as file:
         sql_template = j2.Template(file.read())
         
     timestamp = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(SQL_OUT_FILE, 'w') as file:
         file.write(sql_template.render(fy_list=fy_list, timestamp=timestamp))
+
+print('Done.')

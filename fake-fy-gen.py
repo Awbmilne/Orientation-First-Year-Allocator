@@ -40,6 +40,7 @@ student_faker.add_provider(DepartmentProvider)
 
 def generate_student_data(num_students, output_file):
     # Generate a list of students
+    print(f'Generating {num_students} students...')
     students = []
     for i in range(num_students):
         # Generate a unique watiam
@@ -50,15 +51,18 @@ def generate_student_data(num_students, output_file):
         students.append([student_faker.name(), student_faker.department(), watiam])
     
     # Write the list to a csv file
+    print(f'Writing fake students to {output_file}...')
     with open(output_file, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['Fullname', 'Department', 'Watiam'])
         for student in students:
             writer.writerow(student)
+    
+    print('Done.')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Generate fake student data.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-o', '--output', type=str, help='Output file name', default='generated_fy_list.csv')
+    parser.add_argument('-o', '--output', type=str, help='Output file name', default='generated-fy-list.csv')
     parser.add_argument('-s', '--students', type=int, help='Number of students to generate', default=1700)
     
     args = parser.parse_args()
