@@ -1,5 +1,6 @@
 # Standard Imports
 import os
+import re
 import sys
 import csv
 import json
@@ -46,11 +47,35 @@ allocations in some way (ex. FY Shirt numbers). The program WILL NOT RUN THE ALL
 ALGORITHM if only these arguments are given.
 """, formatter_class=RawTextHelpFormatter)
 
+# Output file validation and enforce data protection naming convention
+def file_with_extension(file, file_type, extension, argument):
+    # Check if the output file exists
+    if file is not None:
+        # Ensure the file has the correct extension.
+        if not re.match(f'.*{r"\." + extension}', file):
+            parser.error(f'Please use a .{extension} extension for the {argument} argument.')
+            exit()
+        # Ensure there is a ".no-keep." in the output file name.
+        if ".no-keep." not in file:
+            file = re.sub(f'(.*)({r"\." + extension})', r'\1.no-keep\2', file)
+            print(f'NOTE: The {file_type} output file name is modified to contain ".no-keep.", for codebase protection. Refer to Git Ignore files for more info.\n      New file name: "{file}"')\
+        # Check if the file exists and if the user wants to replace it.
+        if os.path.exists(file):
+            if not click.confirm(f"WARNING: Output File ({file}) already exists. Overwrite?", default=False):
+                print("Exiting...")
+                print("Rerun the command with a different output file name or delete the existing file.")
+                exit() 
+    return file
+def csv_file(csv_file):
+    return file_with_extension(csv_file, 'CSV', 'csv', '--csv-out')
+def sql_file(sql_file):
+    return file_with_extension(sql_file, 'SQL', 'sql', '--sql-out')
+
 parser.add_argument('--teams', type=str, help='Path to the teams JSON file', required=False)
 parser.add_argument('--fy', type=str, help='Path to the first-year CSV file', required=False)
-parser.add_argument('--csv-out', type=str, help='Path to the allocated first-years CSV file', required=False)
+parser.add_argument('--csv-out', type=csv_file, help='Path to the allocated first-years CSV file', required=False)
 parser.add_argument('--sql', type=str, help='Path to the SQL query template file [requires --sql-out]', required=False)
-parser.add_argument('--sql-out', type=str, help='Path to the generated SQL query file [requires --sql]', required=False)
+parser.add_argument('--sql-out', type=sql_file, help='Path to the generated SQL query file [requires --sql]', required=False)
 
 parser.epilog = \
 """
@@ -75,10 +100,6 @@ if (args.teams is None) \
   and (args.sql is not None) \
   and (args.sql_out is not None):
     print('Converting CSV output file to SQL query file...')
-    # Check if the output file exists and ask user if they want to overwrite it
-    if os.path.exists(args.sql_out):
-        if not click.confirm('WARNING: File already exists. Overwrite?', default=False):
-            exit()
     # Read the SQL Template file
     with open(args.sql, 'r') as file:
         sql_template = j2.Template(file.read())
@@ -115,22 +136,6 @@ if (args.csv_out is None) and ((args.sql_out is None) or (args.sql is None)):
     parser.error('Must specify either --csv-out or both --sql and --sql-out')
     exit()
 
-# Check if the CSV output file exists and ask user if they want to overwrite it
-if FY_OUT_CSV_FILE is not None:
-    if os.path.exists(FY_OUT_CSV_FILE):
-        if not click.confirm(f"WARNING: Output File ({FY_OUT_CSV_FILE}) already exists. Overwrite?", default=False):
-            print("Exiting...")
-            print("Rerun the command with a different output file name or delete the existing file.")
-            exit()
-            
-# Check if the SQL output file exists and ask user if they want to overwrite it
-if SQL_OUT_FILE is not None:
-    if os.path.exists(SQL_OUT_FILE):
-        if not click.confirm(f"WARNING: Output File ({SQL_OUT_FILE}) already exists. Overwrite?", default=False):
-            print("Exiting...")
-            print("Rerun the command with a different output file name or delete the existing file.")
-            exit()
-        
 # CREATE TEAMS INFORMATION FROM JSON FILE ───────────────────────────────────────── #
 
 # Read the 'teams' array from the json file

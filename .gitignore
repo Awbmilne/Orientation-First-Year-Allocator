@@ -2,11 +2,14 @@
 venv
 .venv
 
+# Ignore files with ".no-keep." in their filename, to mitigate accidental storing of
+# sensitive data.
+**/*.no-keep.*
 # Ignore all output files. This mitigates issues of FY student
 # information being commited to the codebase accidentally.
-*.sql
-*.csv
-*.json
+**.sql
+**.csv
+**.json
 # Re-Include config files
 !.vscode/extensions.json
 
